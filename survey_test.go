@@ -32,6 +32,10 @@ func TestOrgNodeFromString(t *testing.T) {
 			"N01.0.0.3",
 			OrgNode{[]int{1, 0, 0, 3}},
 		},
+		{
+			"N01.a0.0.b3",
+			OrgNode{[]int{1, 0, 0, 3}},
+		},
 	}
 
 	for _, tc := range testCases {

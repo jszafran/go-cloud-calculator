@@ -10,16 +10,20 @@ type ColumnType string
 
 const (
 	Question    ColumnType = "question"
-	Demographic            = "demographic"
+	Demographic ColumnType = "demographic"
 	Digits      string     = "0123456789"
 )
 
-var ErrMinValueGreaterThanMaxValue = errors.New("min value cannot be greater than max value")
-var ErrEmptyColumnCode = errors.New("column must have non-empty code")
-var ErrEmptyColumnText = errors.New("column must have non-empty text")
-var ErrEmptyOrgNodeColumn = errors.New("org node column must be non-empty")
-var ErrSchemaContainsColumnsWithDuplicatedCodes = errors.New("schema cannot have columns with duplicated codes")
-var ErrInvalidOrgNodeString = errors.New("invalid org node string")
+var (
+	ErrMinValueGreaterThanMaxValue              = errors.New("min value cannot be greater than max value")
+	ErrEmptyColumnCode                          = errors.New("column must have non-empty code")
+	ErrEmptyColumnText                          = errors.New("column must have non-empty text")
+	ErrEmptyOrgNodeColumn                       = errors.New("org node column must be non-empty")
+	ErrSchemaContainsColumnsWithDuplicatedCodes = errors.New("schema cannot have columns with duplicated codes")
+	ErrInvalidOrgNodeString                     = errors.New("invalid org node string")
+	ErrInvalidColumnType                        = errors.New("invalid column type")
+	ErrColNotFoundInSchema                      = errors.New("column was not found in schema")
+)
 
 // Column represents a column of a survey dataset.
 type Column struct {
@@ -35,6 +39,56 @@ type Column struct {
 type Schema struct {
 	OrgNodeCol string   `yaml:"org_node_col" json:"org_node_col"`
 	Columns    []Column `yaml:"columns" json:"columns"`
+}
+
+// ColumnByCode returns a schema's column with matching code.
+func (s Schema) ColumnByCode(code string) (Column, error) {
+	var column Column
+	for _, c := range s.Columns {
+		if c.Code == code {
+			return c, nil
+		}
+	}
+	return column, ErrColNotFoundInSchema
+}
+
+// Questions returns all columns of type "question".
+func (s Schema) Questions() []Column {
+	res := make([]Column, 0)
+	for _, c := range s.Columns {
+		if c.ColumnType == Question {
+			res = append(res, c)
+		}
+	}
+	return res
+}
+
+// Demographics returns all columns of type "demographics".
+func (s Schema) Demographics() []Column {
+	res := make([]Column, 0)
+	for _, c := range s.Columns {
+		if c.ColumnType == Demographic {
+			res = append(res, c)
+		}
+	}
+	return res
+}
+
+func (s Schema) ColumnsNames() []string {
+	fields := make([]string, 0)
+
+	for _, c := range s.Columns {
+		fields = append(fields, c.Code)
+	}
+
+	return fields
+}
+
+func (s Schema) AllFieldsNames() []string {
+	allFields := make([]string, 0)
+	allFields = append(allFields, s.OrgNodeCol)
+	allFields = append(allFields, s.ColumnsNames()...)
+	return allFields
 }
 
 func validateColumnsCodeUniqueness(columns []Column) error {
@@ -78,6 +132,10 @@ func NewColumn(code, text string, minValue, maxValue int, nullable bool, columnT
 		return col, ErrEmptyColumnText
 	}
 
+	if columnType != Question && columnType != Demographic {
+		return col, ErrInvalidColumnType
+	}
+
 	return Column{
 		Code:       code,
 		Text:       text,
@@ -88,10 +146,12 @@ func NewColumn(code, text string, minValue, maxValue int, nullable bool, columnT
 	}, nil
 }
 
+// OrgNode represents a node (an organization unit or manager) from organizational structure.
 type OrgNode struct {
 	levels []int
 }
 
+// OrgNodeFromString converts a string into an OrgNode struct or returns error if input data is incorrect.
 func OrgNodeFromString(s string, sep string) (OrgNode, error) {
 	var orgNode OrgNode
 
@@ -116,5 +176,3 @@ func OrgNodeFromString(s string, sep string) (OrgNode, error) {
 	}
 	return OrgNode{levels: levels}, nil
 }
-
-type OrgNodes []OrgNode

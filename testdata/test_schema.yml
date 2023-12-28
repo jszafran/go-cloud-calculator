@@ -1,0 +1,27 @@
+org_node_col: org_node
+
+columns:
+  - code: Q1
+    text: Q1
+    min_value: 1
+    max_value: 6
+    nullable: true
+    column_type: question
+  - code: Q2
+    text: Q2
+    min_value: 1
+    max_value: 6
+    nullable: true
+    column_type: question
+  - code: Q3
+    text: Q3
+    min_value: 1
+    max_value: 6
+    nullable: true
+    column_type: question
+  - code: D1
+    text: D1
+    min_value: 1
+    max_value: 6
+    nullable: true
+    column_type: demographic
