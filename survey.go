@@ -2,8 +2,11 @@ package main
 
 import (
 	"errors"
+	"os"
 	"strconv"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
 type ColumnType string
@@ -89,6 +92,22 @@ func (s Schema) AllFieldsNames() []string {
 	allFields = append(allFields, s.OrgNodeCol)
 	allFields = append(allFields, s.ColumnsNames()...)
 	return allFields
+}
+
+func SchemaFromYAML(yamlPath string) (Schema, error) {
+	var schema Schema
+
+	f, err := os.Open(yamlPath)
+	if err != nil {
+		return schema, err
+	}
+
+	err = yaml.NewDecoder(f).Decode(&schema)
+	if err != nil {
+		return schema, err
+	}
+
+	return schema, nil
 }
 
 func validateColumnsCodeUniqueness(columns []Column) error {
